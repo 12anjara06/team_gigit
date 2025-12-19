@@ -1,0 +1,294 @@
+{% load static tailwind_tags %}
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion - Noteo</title>
+    {% tailwind_css %}
+    <!-- CDN Fallback for immediate fix -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <script>
+        if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark')
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        @keyframes scan {
+            0% {
+                top: 0;
+                opacity: 0;
+            }
+
+            10% {
+                opacity: 1;
+            }
+
+            90% {
+                opacity: 1;
+            }
+
+            100% {
+                top: 100%;
+                opacity: 0;
+            }
+        }
+
+        .scan-line {
+            animation: scan 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+        }
+    </style>
+</head>
+
+<body
+    class="bg-white dark:bg-slate-900 h-screen flex items-center justify-center font-sans transition-colors duration-300">
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay"
+        class="fixed inset-0 bg-white/90 dark:bg-slate-900/90 z-50 hidden flex items-center justify-center backdrop-blur-sm">
+        <div class="flex flex-col items-center">
+            <svg class="animate-spin h-12 w-12 text-indigo-600 dark:text-indigo-400 mb-4"
+                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                </path>
+            </svg>
+            <p class="text-slate-900 dark:text-white text-lg font-semibold" id="loading-text">Chargement...</p>
+        </div>
+    </div>
+
+    <!-- Theme Toggle -->
+    <div class="fixed top-4 right-4 z-40">
+        <button onclick="toggleDarkMode()"
+            class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition duration-300">
+            <svg id="theme-icon-light" class="w-5 h-5 hidden dark:block" fill="currentColor" viewBox="0 0 20 20">
+                <path
+                    d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z">
+                </path>
+            </svg>
+            <svg id="theme-icon-dark" class="w-5 h-5 block dark:hidden" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+            </svg>
+        </button>
+    </div>
+
+    <div
+        class="relative w-full max-w-md p-8 bg-white dark:bg-slate-800 rounded-3xl mx-4 shadow-2xl shadow-indigo-100 dark:shadow-slate-900/50">
+
+        <div class="text-center mb-8">
+            <a href="{% url 'index' %}" class="inline-block group">
+                <h1
+                    class="text-4xl font-extrabold text-indigo-600 dark:text-indigo-400 group-hover:scale-110 transition duration-300">
+                    Noteo
+                </h1>
+            </a>
+            <p class="text-slate-500 dark:text-slate-400 mt-2 font-medium">Bienvenue sur votre espace éducatif</p>
+        </div>
+
+        <div id="login-forms">
+            <!-- Username Login -->
+            <form id="login-form" method="post" action="{% url 'login' %}">
+                {% csrf_token %}
+                <div class="mb-5">
+                    <label class="block text-slate-700 dark:text-slate-300 text-sm font-bold mb-2 ml-1" for="username">
+                        Nom d'utilisateur
+                    </label>
+                    <input
+                        class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-slate-600 transition duration-200"
+                        id="username" name="username" type="text" placeholder="Entrez votre pseudo" required>
+                </div>
+                <div class="mb-8">
+                    <label class="block text-slate-700 dark:text-slate-300 text-sm font-bold mb-2 ml-1" for="password">
+                        Mot de passe
+                    </label>
+                    <input
+                        class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-slate-600 transition duration-200"
+                        id="password" name="password" type="password" placeholder="••••••••" required>
+                </div>
+
+                <button
+                    class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg hover:shadow-indigo-500/30 transform hover:-translate-y-0.5 transition duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    type="submit">
+                    Se connecter
+                </button>
+            </form>
+
+            <div class="mt-8 pt-6 border-t border-slate-100 dark:border-slate-700">
+                <button id="face-login-btn"
+                    class="w-full group relative overflow-hidden bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg hover:shadow-emerald-500/30 transform hover:-translate-y-0.5 transition duration-300 flex items-center justify-center">
+                    <div
+                        class="absolute inset-0 w-full h-full bg-white/20 group-hover:bg-transparent transition-colors duration-300">
+                    </div>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 relative z-10" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span class="relative z-10">Connexion visage</span>
+                </button>
+
+                <!-- Moved Create Account link here -->
+                <div class="mt-4 text-center">
+                    <p class="text-sm text-slate-500 dark:text-slate-400">
+                        Nouveau sur Noteo ?
+                        <a href="{% url 'register' %}"
+                            class="text-indigo-600 dark:text-indigo-400 font-bold hover:underline ml-1">
+                            Créer un compte
+                        </a>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Face Login Area (Hidden initially) -->
+        <div id="face-scan-area" class="hidden">
+            <h3 class="text-xl font-bold text-center mb-4 text-slate-900 dark:text-white">Scan du Visage</h3>
+            <div class="relative w-full h-64 bg-black rounded-2xl overflow-hidden shadow-inner group">
+                <video id="video" class="w-full h-full object-cover" autoplay playsinline></video>
+                <canvas id="canvas" class="hidden"></canvas>
+
+                <!-- Scanning Animation -->
+                <div class="absolute inset-0 z-10 pointer-events-none">
+                    <!-- Scanner Line -->
+                    <div
+                        class="scan-line absolute w-full h-1 bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.8)] opacity-80 top-0">
+                    </div>
+                    <!-- Frame Corners -->
+                    <div
+                        class="absolute top-4 left-4 w-8 h-8 border-t-4 border-l-4 border-emerald-500/50 rounded-tl-lg">
+                    </div>
+                    <div
+                        class="absolute top-4 right-4 w-8 h-8 border-t-4 border-r-4 border-emerald-500/50 rounded-tr-lg">
+                    </div>
+                    <div
+                        class="absolute bottom-4 left-4 w-8 h-8 border-b-4 border-l-4 border-emerald-500/50 rounded-bl-lg">
+                    </div>
+                    <div
+                        class="absolute bottom-4 right-4 w-8 h-8 border-b-4 border-r-4 border-emerald-500/50 rounded-br-lg">
+                    </div>
+                </div>
+            </div>
+
+            <button id="capture-btn"
+                class="mt-6 w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition duration-300">
+                Scanner
+            </button>
+
+            <button id="cancel-face-btn"
+                class="mt-3 w-full text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 font-medium py-2 text-sm transition duration-300">
+                Annuler
+            </button>
+
+            <p id="face-status" class="text-center font-medium mt-3 text-slate-600 dark:text-slate-300 h-6"></p>
+        </div>
+    </div>
+
+    <!-- Script for Webcam and Face ID -->
+    <script>
+        const faceLoginBtn = document.getElementById('face-login-btn');
+        const faceScanArea = document.getElementById('face-scan-area');
+        const loginForms = document.getElementById('login-forms');
+        const cancelFaceBtn = document.getElementById('cancel-face-btn');
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const captureBtn = document.getElementById('capture-btn');
+        const statusMsg = document.getElementById('face-status');
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const loadingText = document.getElementById('loading-text');
+        const loginForm = document.getElementById('login-form');
+        let stream = null;
+
+        // Standard Login Loading
+        loginForm.addEventListener('submit', function () {
+            loadingText.textContent = "Connexion en cours...";
+            loadingOverlay.classList.remove('hidden');
+        });
+
+        faceLoginBtn.addEventListener('click', async () => {
+            loginForms.classList.add('hidden');
+            faceScanArea.classList.remove('hidden');
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                video.srcObject = stream;
+            } catch (err) {
+                console.error("Error accessing webcam: ", err);
+                statusMsg.textContent = "Erreur: Impossible d'accéder à la caméra.";
+                statusMsg.className = "text-center font-bold mt-3 text-red-500 h-6";
+            }
+        });
+
+        cancelFaceBtn.addEventListener('click', () => {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+            faceScanArea.classList.add('hidden');
+            loginForms.classList.remove('hidden');
+            statusMsg.textContent = "";
+        });
+
+        captureBtn.addEventListener('click', () => {
+            statusMsg.textContent = "Traitement...";
+            statusMsg.className = "text-center font-medium mt-3 text-slate-600 dark:text-slate-300 h-6";
+
+            // Show overlay
+            loadingText.textContent = "Vérification du visage...";
+            loadingOverlay.classList.remove('hidden');
+
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+            const dataURL = canvas.toDataURL('image/jpeg');
+
+            // Send to backend
+            fetch('/api/face-login/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ image: dataURL })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        statusMsg.textContent = "Succès! Redirection...";
+                        loadingText.textContent = "Authentification réussie !";
+                        window.location.href = data.redirect_url;
+                        // Keep overlay detailed
+                    } else {
+                        loadingOverlay.classList.add('hidden'); // Hide overlay on failure
+                        statusMsg.textContent = "Échec: " + data.message;
+                        statusMsg.className = "text-center font-bold mt-3 text-red-500 h-6";
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    loadingOverlay.classList.add('hidden');
+                    statusMsg.textContent = "Erreur système.";
+                    statusMsg.className = "text-center font-bold mt-3 text-red-500 h-6";
+                });
+        });
+
+        function toggleDarkMode() {
+            if (document.documentElement.classList.contains('dark')) {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('color-theme', 'light');
+            } else {
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('color-theme', 'dark');
+            }
+        }
+    </script>
+</body>
+
+</html>

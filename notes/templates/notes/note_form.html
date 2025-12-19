@@ -1,0 +1,76 @@
+{% load static tailwind_tags %}
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nouvelle Note - Noteo</title>
+    {% tailwind_css %}
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #fbfcff;
+        }
+    </style>
+</head>
+
+<body class="text-slate-900 h-screen flex items-center justify-center p-6">
+    <div
+        class="w-full max-w-4xl bg-white rounded-[2.5rem] shadow-2xl shadow-indigo-100/50 border border-slate-100 overflow-hidden flex flex-col">
+        <!-- Header -->
+        <div class="px-10 py-8 border-b border-slate-50 flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                <div
+                    class="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-200">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-black text-slate-900">Nouvelle Note Intelligente</h1>
+                    <p class="text-sm text-slate-400 font-medium">L'IA s'occupe de structurer et de titrer votre
+                        contenu.</p>
+                </div>
+            </div>
+            <a href="{% url 'note_list' %}"
+                class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-50 text-slate-300 hover:text-slate-600 transition">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                    </path>
+                </svg>
+            </a>
+        </div>
+
+        <!-- Form -->
+        <form method="post" class="flex-1 flex flex-col p-10 space-y-8">
+            {% csrf_token %}
+
+            <div class="flex-1 flex flex-col space-y-3">
+                <label class="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">Contenu de la
+                    note</label>
+                <textarea name="content" required placeholder="Collez votre cours ou vos notes ici... "
+                    class="flex-1 w-full bg-slate-50 border-none rounded-3xl py-6 px-8 text-slate-800 text-xl focus:ring-2 focus:ring-indigo-500 placeholder-slate-300 transition resize-none min-h-[400px] leading-relaxed"></textarea>
+            </div>
+
+            <div class="pt-4 flex items-center justify-end space-x-6">
+                <a href="{% url 'note_list' %}"
+                    class="text-sm font-bold text-slate-400 hover:text-slate-600 transition">Annuler</a>
+                <button type="submit"
+                    class="bg-indigo-600 hover:bg-indigo-700 text-white font-black py-5 px-14 rounded-2xl shadow-2xl shadow-indigo-200 transition transform hover:scale-[1.02] active:scale-95 flex items-center group">
+                    <span>Générer ma note</span>
+                    <svg class="w-5 h-5 ml-3 transform group-hover:translate-x-1 transition" fill="none"
+                        stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
+                            d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                    </svg>
+                </button>
+            </div>
+        </form>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,734 @@
+{% load static tailwind_tags %}
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Noteo Dashboard</title>
+    {% tailwind_css %}
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script>
+        if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark')
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #fbfcff;
+        }
+
+        .dark body {
+            background-color: #0f172a;
+        }
+
+        .sidebar-scroll::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .sidebar-scroll::-webkit-scrollbar-thumb {
+            background: #e2e8f0;
+            border-radius: 10px;
+        }
+
+        .dark .sidebar-scroll::-webkit-scrollbar-thumb {
+            background: #334155;
+        }
+
+        .note-active {
+            background: #eef2ff;
+            border-left: 4px solid #4f46e5;
+        }
+
+        .dark .note-active {
+            background: #1e293b;
+            border-left: 4px solid #6366f1;
+        }
+
+        textarea:focus {
+            outline: none;
+            border: none;
+            box-shadow: none;
+        }
+
+        .markdown-content h1 {
+            font-size: 1.875rem;
+            font-weight: 800;
+            color: #0f172a;
+            margin: 2rem 0 1rem;
+            border-bottom: 1px solid #f1f5f9;
+            padding-bottom: 0.5rem;
+        }
+
+        .dark .markdown-content h1 {
+            color: #f8fafc;
+            border-bottom-color: #1e293b;
+        }
+
+        .markdown-content h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin: 1.5rem 0 0.75rem;
+        }
+
+        .dark .markdown-content h2 {
+            color: #f1f5f9;
+        }
+
+        .markdown-content p {
+            margin-bottom: 1rem;
+            color: #475569;
+            line-height: 1.75;
+        }
+
+        .dark .markdown-content p {
+            color: #94a3b8;
+        }
+
+        .markdown-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            border: 1px solid #f1f5f9;
+            border-radius: 0.75rem;
+            overflow: hidden;
+        }
+
+        .dark .markdown-content table {
+            border-color: #1e293b;
+        }
+
+        .markdown-content th {
+            background-color: #f8fafc;
+            color: #64748b;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            padding: 1rem;
+            text-align: left;
+        }
+
+        .dark .markdown-content th {
+            background-color: #1e293b;
+            color: #94a3b8;
+        }
+
+        .markdown-content td {
+            padding: 1rem;
+            border-bottom: 1px solid #f1f5f9;
+            color: #334155;
+        }
+
+        .dark .markdown-content td {
+            border-bottom-color: #1e293b;
+            color: #cbd5e1;
+        }
+
+        /* Productivity Chart Styles */
+        .bar-container {
+            height: 100px;
+            display: flex;
+            align-items: flex-end;
+            gap: 4px;
+            padding: 4px;
+        }
+
+        .bar {
+            flex: 1;
+            background: linear-gradient(to top, #6366f1, #a855f7);
+            border-radius: 4px;
+            height: 0;
+            transition: height 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+        }
+
+        .bar:hover {
+            filter: brightness(1.1);
+            transform: scaleX(1.1);
+        }
+
+        .bar-label {
+            font-size: 7px;
+            font-weight: 700;
+            color: #94a3b8;
+            text-align: center;
+            margin-top: 4px;
+            text-transform: uppercase;
+        }
+
+        .chart-loading-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(4px);
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 1rem;
+            transition: opacity 0.5s ease;
+        }
+
+        .dark .chart-loading-overlay {
+            background: rgba(15, 23, 42, 0.2);
+        }
+
+        .loading-shimmer {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: -200% 0;
+            }
+
+            100% {
+                background-position: 200% 0;
+            }
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 1rem;
+            padding: 0.5rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .dark .stat-card {
+            background: rgba(30, 41, 59, 0.3);
+            border-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            background: rgba(255, 255, 255, 0.4);
+        }
+
+        .dark .stat-card:hover {
+            background: rgba(30, 41, 59, 0.5);
+        }
+
+        /* Loading Animation */
+        @keyframes spin-slow {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+        .dark .loading-overlay {
+            background: rgba(15, 23, 42, 0.8);
+        }
+
+        .loading-pulse {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6366f1, #a855f7);
+            position: relative;
+            animation: pulse-ring 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
+        }
+
+        @keyframes pulse-ring {
+            0% {
+                transform: scale(0.8);
+                opacity: 0.5;
+                box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4);
+            }
+
+            70% {
+                transform: scale(1.1);
+                opacity: 0.3;
+                box-shadow: 0 0 0 40px rgba(99, 102, 241, 0);
+            }
+
+            100% {
+                transform: scale(0.8);
+                opacity: 0.5;
+                box-shadow: 0 0 0 0 rgba(99, 102, 241, 0);
+            }
+        }
+    </style>
+</head>
+
+<body
+    class="text-slate-900 dark:text-slate-100 h-screen flex flex-col bg-white dark:bg-slate-900 transition-colors duration-300 overflow-hidden">
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="relative flex items-center justify-center">
+            <div class="loading-pulse"></div>
+            <div class="absolute text-white font-black text-2xl">N</div>
+        </div>
+        <div class="mt-8 text-center px-6">
+            <h2 class="text-2xl font-black text-slate-900 dark:text-white mb-2">Génération en cours...</h2>
+            <p class="text-slate-500 dark:text-slate-400 font-medium">L'IA structure et titre votre note intelligemment.
+            </p>
+        </div>
+    </div>
+    <header
+        class="h-16 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between px-6 shrink-0 bg-white dark:bg-slate-900 z-50">
+        <div class="w-80 flex items-center shrink-0">
+            <a href="{% url 'index' %}" class="flex items-center space-x-3 group">
+                <div
+                    class="w-10 h-10 overflow-hidden flex items-center justify-center group-hover:scale-110 transition duration-300">
+                    <img src="{% static 'images/logo.png' %}" alt="Noteo Logo" class="w-full h-full object-contain">
+                </div>
+                <span class="text-xl font-black tracking-tight text-slate-900 dark:text-white">Noteo</span>
+            </a>
+        </div>
+        <div class="flex-1 flex justify-center px-12 min-w-0">
+            <div class="w-full max-w-3xl flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <button class="text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition"
+                        title="Menu side">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 6h16M4 12h16M4 18h7"></path>
+                        </svg>
+                    </button>
+                    <div class="h-4 w-px bg-slate-200 dark:bg-slate-800 mx-1"></div>
+                    <a href="{% url 'note_create' %}"
+                        class="p-1.5 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition group"
+                        title="Nouvelle note">
+                        <svg class="w-5 h-5 group-hover:rotate-90 transition-transform duration-300" fill="none"
+                            stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4">
+                            </path>
+                        </svg>
+                    </a>
+                    <div class="h-4 w-px bg-slate-200 dark:bg-slate-800 mx-1"></div>
+                    <button
+                        class="text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition font-bold text-sm">Aa</button>
+                    {% if active_note and not is_creating %}
+                    <div class="h-4 w-px bg-slate-200 dark:bg-slate-800 mx-1"></div>
+                    <form action="{% url 'note_delete' active_note.id %}" method="post"
+                        onsubmit="return confirm('Supprimer cette note ?');">
+                        {% csrf_token %}
+                        <button type="submit" class="p-2 text-slate-400 hover:text-rose-500 transition"
+                            title="Supprimer">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+                <div class="flex items-center space-x-4">
+                    {% if is_creating %}
+                    <button type="submit" form="creation-form"
+                        class="bg-indigo-600 text-white font-bold py-1.5 px-4 rounded-lg shadow-sm hover:bg-indigo-700 transition flex items-center text-[10px] uppercase tracking-wider">
+                        <span>Générer</span>
+                        <svg class="w-3.5 h-3.5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                        </svg>
+                    </button>
+                    {% endif %}
+                    <span class="text-[11px] font-bold text-slate-300 uppercase tracking-wider hidden lg:block">
+                        {% if active_note and not is_creating %}
+                        {{ active_note.created_at|date:"d F Y à H:i" }}
+                        {% else %}
+                        {{ now|date:"d F Y à H:i" }}
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="w-80 flex items-center justify-end space-x-3 shrink-0">
+            <a href="{% url 'community_list' %}"
+                class="p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition flex items-center space-x-2 group"
+                title="Communauté">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
+                    </path>
+                </svg>
+                <span class="text-[10px] font-bold uppercase tracking-wider hidden sm:inline">Community</span>
+            </a>
+            <div class="h-4 w-px bg-slate-100 dark:bg-slate-800 mx-1"></div>
+            <button onclick="toggleDarkMode()"
+                class="p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition">
+                <svg id="theme-icon-light" class="w-4 h-4 hidden dark:block" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                        d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z">
+                    </path>
+                </svg>
+                <svg id="theme-icon-dark" class="w-4 h-4 block dark:hidden" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+                </svg>
+            </button>
+            <div class="h-4 w-px bg-slate-100 dark:bg-slate-800 mx-1"></div>
+            <a href="{% url 'profile' %}"
+                class="w-8 h-8 rounded-full overflow-hidden shadow-lg transform hover:scale-110 transition flex items-center justify-center">
+                {% if user.profile_picture %}
+                <img src="{{ user.profile_picture.url }}" alt="{{ user.username }}" class="w-full h-full object-cover">
+                {% else %}
+                <div
+                    class="w-full h-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-[10px] font-bold">
+                    {{ user.username|first|upper }}
+                </div>
+                {% endif %}
+            </a>
+            <form action="{% url 'logout' %}" method="post">
+                {% csrf_token %}
+                <button type="submit" class="text-slate-400 hover:text-red-500 transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1">
+                        </path>
+                    </svg>
+                </button>
+            </form>
+        </div>
+    </header>
+    <div class="flex-1 flex overflow-hidden">
+        <aside
+            class="w-80 bg-[#f8fafc] dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col shrink-0">
+            <div class="p-6 pb-2">
+                <div class="relative">
+                    <input type="text" placeholder="Rechercher"
+                        class="w-full bg-[#f1f5f9] dark:bg-slate-800 border-none rounded-lg py-2 pl-9 pr-4 text-sm focus:ring-1 focus:ring-indigo-500 placeholder-slate-400 dark:text-white transition">
+                    <svg class="w-4 h-4 absolute left-3 top-2.5 text-slate-400 dark:text-slate-500" fill="none"
+                        stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                </div>
+            </div>
+            <div class="flex-1 overflow-y-auto sidebar-scroll px-3">
+                <h3
+                    class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest px-3 mb-2">
+                    Notes</h3>
+                <div class="space-y-1">
+                    {% for note in notes %}
+                    <a href="{% url 'note_list_detail' note.id %}"
+                        class="block p-4 rounded-xl transition {% if active_note.id == note.id and not is_creating %}note-active{% else %}hover:bg-slate-100 dark:hover:bg-slate-800{% endif %} group relative">
+                        <div class="flex items-center justify-between mb-1">
+                            <h4 class="text-sm font-bold text-slate-800 dark:text-slate-200 truncate pr-6">
+                                {{ note.title }}
+                            </h4>
+                        </div>
+                        <div class="flex items-center text-[11px] text-slate-500 dark:text-slate-400 space-x-2">
+                            <span class="font-medium">{{ note.created_at|date:"H:i" }}</span>
+                            <span class="truncate">{{ note.original_content|truncatechars:30 }}</span>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="p-4 border-t border-slate-100 dark:border-slate-800 text-center">
+                <span class="text-[10px] font-bold text-slate-300 dark:text-slate-600 uppercase">
+                    {{ notes.count }} notes
+                </span>
+            </div>
+        </aside>
+        <main
+            class="flex-1 flex flex-col min-w-0 bg-white dark:bg-slate-900 border-r border-slate-100 dark:border-slate-800 overflow-y-auto sidebar-scroll">
+            <div class="p-12 w-full">
+                {% if is_creating %}
+                <form method="post" action="{% url 'note_create' %}" id="creation-form"
+                    class="max-w-3xl mx-auto flex flex-col space-y-8">
+                    {% csrf_token %}
+                    <textarea name="content" id="note-textarea" autofocus
+                        placeholder="Commencez à écrire votre cours ici... L'IA s'occupe du titre et de la structure."
+                        class="w-full min-h-[500px] bg-transparent border-none p-0 text-xl leading-relaxed text-slate-800 dark:text-slate-200 placeholder-slate-300 dark:placeholder-slate-600 resize-none focus:ring-0 overflow-hidden"></textarea>
+                </form>
+                {% elif active_note %}
+                <div class="max-w-3xl mx-auto space-y-8">
+                    <div class="space-y-4">
+                        <h1 class="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+                            {{ active_note.title }}
+                        </h1>
+                        <span
+                            class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider {% if active_note.truth_score > 80 %}bg-emerald-50 text-emerald-600{% elif active_note.truth_score > 50 %}bg-amber-50 text-amber-600{% else %}bg-rose-50 text-rose-600{% endif %}">
+                            Score de Vérité: {{ active_note.truth_score }}%
+                        </span>
+                    </div>
+                    {% if active_note.issues %}
+                    <div
+                        class="bg-rose-50 dark:bg-rose-900/10 border border-rose-100 dark:border-rose-900/20 p-5 rounded-2xl">
+                        <h3
+                            class="text-rose-600 text-[10px] font-black uppercase tracking-widest mb-3 flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+                                </path>
+                            </svg>
+                            Analyse de fiabilité
+                        </h3>
+                        <ul class="text-rose-700/80 dark:text-rose-400/80 text-sm list-disc pl-5 space-y-1">
+                            {% for issue in active_note.issues %}
+                            <li>{{ issue }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                    <div id="note-data" class="hidden">{{ active_note.corrected_content|safe }}</div>
+                    <div id="rendered-content"
+                        class="markdown-content text-xl leading-relaxed text-slate-700 dark:text-slate-300"></div>
+                </div>
+                {% else %}
+                <div class="h-full min-h-[400px] flex flex-col items-center justify-center text-slate-300">
+                    <svg class="w-16 h-16 mb-4 opacity-20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
+                        </path>
+                    </svg>
+                    <p class="font-bold text-slate-400">Sélectionnez une note pour commencer</p>
+                </div>
+                {% endif %}
+            </div>
+        </main>
+        <aside
+            class="w-80 bg-white dark:bg-slate-900 hidden 2xl:flex flex-col p-4 space-y-4 shrink-0 relative overflow-hidden">
+            <div class="bg-blob bg-indigo-400 top-20 -right-10"></div>
+            <div class="bg-blob bg-purple-400 bottom-40 -left-10"></div>
+            <div class="flex flex-col gap-4 relative z-10">
+                <div class="glass-calendar rounded-[1rem] p-4 w-full">
+                    <h3 id="side-month"
+                        class="text-[10px] font-black uppercase tracking-widest text-slate-900 dark:text-white mb-2 text-center">
+                        Calendrier</h3>
+                    <div class="grid grid-cols-7 gap-1 text-[8px] font-black text-slate-400 uppercase mb-2 text-center">
+                        <span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>D</span>
+                    </div>
+                    <div id="side-calendar-grid" class="grid grid-cols-7 gap-1 text-center text-[10px] font-bold"></div>
+                </div>
+
+                <div class="stat-card relative overflow-hidden group">
+                    <div id="chart-loader" class="chart-loading-overlay">
+                        <div class="loading-shimmer"></div>
+                    </div>
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex flex-col">
+                            <h4 class="text-[10px] font-black uppercase tracking-widest text-slate-900 dark:text-white">
+                                Productivité</h4>
+                            <span id="prod-progression"
+                                class="text-[8px] font-bold text-emerald-500 flex items-center mt-0.5">
+                                <svg class="w-2 h-2 mr-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd"
+                                        d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z"
+                                        clip-rule="evenodd"></path>
+                                </svg>
+                                <span class="prog-val">+12%</span>
+                            </span>
+                        </div>
+                        <span
+                            class="text-[8px] font-bold text-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 px-2 py-0.5 rounded-full">HEBDO</span>
+                    </div>
+                    <div class="bar-container mb-2">
+                        <div class="flex flex-col flex-1 gap-1">
+                            <div class="bar" data-height="60%"></div>
+                            <span class="bar-label">L</span>
+                        </div>
+                        <div class="flex flex-col flex-1 gap-1">
+                            <div class="bar" data-height="85%"></div>
+                            <span class="bar-label">M</span>
+                        </div>
+                        <div class="flex flex-col flex-1 gap-1">
+                            <div class="bar" data-height="45%"></div>
+                            <span class="bar-label">M</span>
+                        </div>
+                        <div class="flex flex-col flex-1 gap-1">
+                            <div class="bar" data-height="70%"></div>
+                            <span class="bar-label">J</span>
+                        </div>
+                        <div class="flex flex-col flex-1 gap-1">
+                            <div class="bar" data-height="95%"></div>
+                            <span class="bar-label">V</span>
+                        </div>
+                        <div class="flex flex-col flex-1 gap-1">
+                            <div class="bar" data-height="30%"></div>
+                            <span class="bar-label">S</span>
+                        </div>
+                        <div class="flex flex-col flex-1 gap-1">
+                            <div class="bar" data-height="50%"></div>
+                            <span class="bar-label">D</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card relative overflow-hidden group">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex flex-col">
+                        <h4 class="text-[10px] font-black uppercase tracking-widest text-slate-900 dark:text-white">
+                            Temps d'Étude</h4>
+                        <span id="study-progression"
+                            class="text-[8px] font-bold text-emerald-500 flex items-center mt-0.5">
+                            <svg class="w-2 h-2 mr-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd"
+                                    d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z"
+                                    clip-rule="evenodd"></path>
+                            </svg>
+                            <span class="prog-val">+8.4%</span>
+                        </span>
+                    </div>
+                    <span
+                        class="text-[8px] font-bold text-purple-500 bg-purple-50 dark:bg-purple-900/30 px-2 py-0.5 rounded-full">QUOTIDIEN</span>
+                </div>
+                <div class="bar-container mb-2">
+                    <div class="flex flex-col flex-1 gap-1">
+                        <div class="bar" data-height="40%"
+                            style="background: linear-gradient(to top, #8b5cf6, #d946ef);"></div>
+                        <span class="bar-label">08h</span>
+                    </div>
+                    <div class="flex flex-col flex-1 gap-1">
+                        <div class="bar" data-height="75%"
+                            style="background: linear-gradient(to top, #8b5cf6, #d946ef);"></div>
+                        <span class="bar-label">10h</span>
+                    </div>
+                    <div class="flex flex-col flex-1 gap-1">
+                        <div class="bar" data-height="90%"
+                            style="background: linear-gradient(to top, #8b5cf6, #d946ef);"></div>
+                        <span class="bar-label">12h</span>
+                    </div>
+                    <div class="flex flex-col flex-1 gap-1">
+                        <div class="bar" data-height="65%"
+                            style="background: linear-gradient(to top, #8b5cf6, #d946ef);"></div>
+                        <span class="bar-label">14h</span>
+                    </div>
+                    <div class="flex flex-col flex-1 gap-1">
+                        <div class="bar" data-height="85%"
+                            style="background: linear-gradient(to top, #8b5cf6, #d946ef);"></div>
+                        <span class="bar-label">16h</span>
+                    </div>
+                    <div class="flex flex-col flex-1 gap-1">
+                        <div class="bar" data-height="55%"
+                            style="background: linear-gradient(to top, #8b5cf6, #d946ef);"></div>
+                        <span class="bar-label">18h</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </div>
+    <script>
+        function toggleDarkMode() { if (document.documentElement.classList.contains('dark')) { document.documentElement.classList.remove('dark'); localStorage.setItem('color-theme', 'light'); } else { document.documentElement.classList.add('dark'); localStorage.setItem('color-theme', 'dark'); } }
+        document.addEventListener('DOMContentLoaded', () => {
+            const data = document.getElementById('note-data');
+            const target = document.getElementById('rendered-content');
+            if (data && target) { target.innerHTML = marked.parse(data.textContent.trim()); }
+
+            // Auto-resize textarea
+            const textarea = document.getElementById('note-textarea');
+            if (textarea) {
+                textarea.addEventListener('input', () => {
+                    textarea.style.height = 'auto';
+                    textarea.style.height = textarea.scrollHeight + 'px';
+                });
+                // Initial resize
+                textarea.style.height = 'auto';
+                textarea.style.height = textarea.scrollHeight + 'px';
+            }
+
+            // Generation Loading
+            const creationForm = document.getElementById('creation-form');
+            const generateBtn = document.querySelector('button[form="creation-form"]');
+            if (creationForm) {
+                creationForm.addEventListener('submit', () => {
+                    document.getElementById('loading-overlay').style.display = 'flex';
+                    if (generateBtn) {
+                        generateBtn.disabled = true;
+                        generateBtn.innerHTML = '<span>Traitement...</span>';
+                    }
+                });
+            }
+        });
+        function tick() {
+            const now = new Date(); const h = now.getHours(), m = now.getMinutes(), s = now.getSeconds();
+            const hDeg = (h % 12) * 30 + m * 0.5, mDeg = m * 6, sDeg = s * 6;
+            const hh = document.getElementById('hour-h'), mm = document.getElementById('min-h'), ss = document.getElementById('sec-h');
+            if (hh) hh.style.transform = `translateX(-50%) rotate(${hDeg}deg)`; if (mm) mm.style.transform = `translateX(-50%) rotate(${mDeg}deg)`; if (ss) ss.style.transform = `translateX(-50%) rotate(${sDeg}deg)`;
+            const digital = document.getElementById('side-time'); if (digital) digital.textContent = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+            const dateStr = document.getElementById('side-date'); if (dateStr) dateStr.textContent = now.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+        }
+        function drawCalendar() {
+            const now = new Date(); const month = now.getMonth(), year = now.getFullYear();
+            const first = new Date(year, month, 1).getDay(), days = new Date(year, month + 1, 0).getDate();
+            const offset = first === 0 ? 6 : first - 1;
+            const grid = document.getElementById('side-calendar-grid'), label = document.getElementById('side-month');
+            if (label) label.textContent = now.toLocaleDateString('fr-FR', { month: 'long' }).toUpperCase();
+            if (!grid) return; grid.innerHTML = '';
+            for (let i = 0; i < offset; i++) grid.innerHTML += '<div></div>';
+            for (let d = 1; d <= days; d++) { const isToday = d === now.getDate(); grid.innerHTML += `<div class="h-7 flex items-center justify-center rounded-lg ${isToday ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-600 dark:text-slate-400'}">${d}</div>`; }
+        }
+        setInterval(tick, 1000); tick(); drawCalendar();
+
+        // Animate Charts after loading
+        setTimeout(() => {
+            const loader = document.getElementById('chart-loader');
+            if (loader) {
+                loader.style.opacity = '0';
+                setTimeout(() => loader.style.display = 'none', 500);
+            }
+            document.querySelectorAll('.bar').forEach(bar => {
+                bar.style.height = bar.getAttribute('data-height');
+            });
+
+            // Start live simulations (subtle updates every 4s)
+            setInterval(() => {
+                document.querySelectorAll('.bar').forEach(bar => {
+                    const originalHeight = parseInt(bar.getAttribute('data-height'));
+                    const variance = (Math.random() * 10 - 5); // +/- 5%
+                    const newHeight = Math.min(100, Math.max(10, originalHeight + variance));
+                    bar.style.height = `${newHeight}%`;
+                });
+
+                // Update progression values subtly
+                ['prod-progression', 'study-progression'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        const valEl = el.querySelector('.prog-val');
+                        let current = parseFloat(valEl.textContent);
+                        const change = (Math.random() * 2 - 1).toFixed(1);
+                        const newVal = (current + parseFloat(change)).toFixed(1);
+                        valEl.textContent = (newVal > 0 ? '+' : '') + newVal + '%';
+
+                        // Change color if negative
+                        if (newVal < 0) {
+                            el.classList.remove('text-emerald-500');
+                            el.classList.add('text-rose-500');
+                            el.querySelector('svg').style.transform = 'rotate(180deg)';
+                        } else {
+                            el.classList.remove('text-rose-500');
+                            el.classList.add('text-emerald-500');
+                            el.querySelector('svg').style.transform = 'rotate(0deg)';
+                        }
+                    }
+                });
+            }, 4000);
+        }, 1500);
+    </script>
+</body>
+
+</html>

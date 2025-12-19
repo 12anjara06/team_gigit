@@ -1,0 +1,34 @@
+﻿Creating dummy BGR image...
+Simulating conversions...
+Image shape: (100, 100, 3), dtype: uint8
+Flags:   C_CONTIGUOUS : True
+  F_CONTIGUOUS : False
+  OWNDATA : True
+  WRITEABLE : True
+  ALIGNED : True
+  WRITEBACKIFCOPY : False
+
+Strides: (300, 3, 1)
+Itemsize: 1
+
+--- COMPARISON ---
+Constructed: shape=(100, 100, 3), dtype=uint8, flags=  C_CONTIGUOUS : True
+  F_CONTIGUOUS : False
+  OWNDATA : True
+  WRITEABLE : True
+  ALIGNED : True
+  WRITEBACKIFCOPY : False
+
+Loaded:      shape=(100, 100, 3), dtype=uint8, flags=  C_CONTIGUOUS : True
+  F_CONTIGUOUS : False
+  OWNDATA : True
+  WRITEABLE : True
+  ALIGNED : True
+  WRITEBACKIFCOPY : False
+
+
+Attempting loaded image...
+Loaded image works!
+
+Attempting constructed image...
+Constructed image works!
